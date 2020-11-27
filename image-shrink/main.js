@@ -1,13 +1,13 @@
-const { app, BrowserWindow, Menu, globalShortcut } = require("electron");
+const { app, BrowserWindow, Menu } = require("electron");
 
 // 開発環境に設定
 process.env.NODE_ENV = "development";
 
 const isDev = process.env.NODE_ENV !== "production" ? true : false;
-const isWin = process.platform === "win32" ? true : false;
 const isMac = process.platform === "darwin" ? true : false;
 
 let mainWindow;
+let aboutWindow;
 
 function createMainWindow() {
   mainWindow = new BrowserWindow({
@@ -20,11 +20,19 @@ function createMainWindow() {
   });
 
   mainWindow.loadFile(`${__dirname}/app/index.html`);
+}
 
-  // ターミナルのエラーメッセージを非表示にするために設定
-  webPreferences: {
-    contextIsolation: true;
-  }
+function createAboutWindow() {
+  aboutWindow = new BrowserWindow({
+    title: "画像圧縮ツール",
+    width: 300,
+    height: 300,
+    icon: `${__dirname}/assets/icons/Icon_32x32.png`,
+    resizable: false,
+    backgroundColor: "white",
+  });
+
+  aboutWindow.loadFile(`${__dirname}/app/about.html`);
 }
 
 app.on("ready", () => {
@@ -32,20 +40,39 @@ app.on("ready", () => {
 
   const mainMenu = Menu.buildFromTemplate(menu);
   Menu.setApplicationMenu(mainMenu);
-
-  globalShortcut.register("CmdOrCtrl+R", () => mainWindow.reload());
-  globalShortcut.register(isMac ? "Command+Alt+I" : "Ctrl+Shift+I", () =>
-    mainWindow.toggleDevTools()
-  );
-
   mainWindow.on("closed", () => (mainWindow = null));
 });
 
 const menu = [
-  ...(isMac ? [{ role: "appMenu" }] : []),
+  ...(isMac
+    ? [
+        {
+          label: app.name,
+          submenu: [
+            {
+              label: "about",
+              click: createAboutWindow,
+            },
+          ],
+        },
+      ]
+    : []),
   {
     role: "fileMenu",
   },
+  ...(!isMac
+    ? [
+        {
+          label: "Help",
+          submenu: [
+            {
+              label: "about",
+              click: createAboutWindow,
+            },
+          ],
+        },
+      ]
+    : []),
   ...(isDev
     ? [
         {
