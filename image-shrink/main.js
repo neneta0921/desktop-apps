@@ -12,12 +12,19 @@ let aboutWindow;
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     title: "画像圧縮ツール",
-    width: 500,
+    width: isDev ? 700 : 500,
     height: 600,
     icon: `${__dirname}/assets/icons/Icon_32x32.png`,
     resizable: isDev,
     backgroundColor: "white",
+    webPreferences: {
+      nodeIntegration: true,
+    },
   });
+
+  if (isDev) {
+    mainWindow.webContents.openDevTools();
+  }
 
   mainWindow.loadFile(`${__dirname}/app/index.html`);
 }
