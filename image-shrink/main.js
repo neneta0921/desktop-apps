@@ -1,22 +1,22 @@
-const { app, BrowserWindow, Menu } = require("electron");
+const { app, BrowserWindow, Menu } = require('electron');
 
 // 開発環境に設定
-process.env.NODE_ENV = "development";
+process.env.NODE_ENV = 'development';
 
-const isDev = process.env.NODE_ENV !== "production" ? true : false;
-const isMac = process.platform === "darwin" ? true : false;
+const isDev = process.env.NODE_ENV !== 'production' ? true : false;
+const isMac = process.platform === 'darwin' ? true : false;
 
 let mainWindow;
 let aboutWindow;
 
 function createMainWindow() {
   mainWindow = new BrowserWindow({
-    title: "画像圧縮ツール",
+    title: '画像圧縮ツール',
     width: isDev ? 700 : 500,
     height: 600,
     icon: `${__dirname}/assets/icons/Icon_32x32.png`,
     resizable: isDev,
-    backgroundColor: "white",
+    backgroundColor: 'white',
     webPreferences: {
       nodeIntegration: true,
     },
@@ -31,23 +31,23 @@ function createMainWindow() {
 
 function createAboutWindow() {
   aboutWindow = new BrowserWindow({
-    title: "画像圧縮ツール",
+    title: '画像圧縮ツール',
     width: 300,
     height: 300,
     icon: `${__dirname}/assets/icons/Icon_32x32.png`,
     resizable: false,
-    backgroundColor: "white",
+    backgroundColor: 'white',
   });
 
   aboutWindow.loadFile(`${__dirname}/app/about.html`);
 }
 
-app.on("ready", () => {
+app.on('ready', () => {
   createMainWindow();
 
   const mainMenu = Menu.buildFromTemplate(menu);
   Menu.setApplicationMenu(mainMenu);
-  mainWindow.on("closed", () => (mainWindow = null));
+  mainWindow.on('closed', () => (mainWindow = null));
 });
 
 const menu = [
@@ -57,7 +57,7 @@ const menu = [
           label: app.name,
           submenu: [
             {
-              label: "about",
+              label: 'about',
               click: createAboutWindow,
             },
           ],
@@ -65,15 +65,15 @@ const menu = [
       ]
     : []),
   {
-    role: "fileMenu",
+    role: 'fileMenu',
   },
   ...(!isMac
     ? [
         {
-          label: "Help",
+          label: 'Help',
           submenu: [
             {
-              label: "about",
+              label: 'about',
               click: createAboutWindow,
             },
           ],
@@ -83,25 +83,25 @@ const menu = [
   ...(isDev
     ? [
         {
-          label: "Developer",
+          label: 'Developer',
           submenu: [
-            { role: "reload" },
-            { role: "forcereload" },
-            { type: "separator" },
-            { role: "toggledevtools" },
+            { role: 'reload' },
+            { role: 'forcereload' },
+            { type: 'separator' },
+            { role: 'toggledevtools' },
           ],
         },
       ]
     : []),
 ];
 
-app.on("window-all-closed", () => {
+app.on('window-all-closed', () => {
   if (!isMac) {
     app.quit();
   }
 });
 
-app.on("activate", () => {
+app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
