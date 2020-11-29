@@ -24,3 +24,10 @@ form.addEventListener('submit', (e) => {
     quality,
   })
 })
+
+// イメージを圧縮した後にメインプロセスから処理を受け取る
+ipcRenderer.on('image:done', () => {
+  M.toast({
+    html: `画像を${slider.value}%圧縮しました`,
+  })
+})
