@@ -1,14 +1,21 @@
-const { app, BrowserWindow, Menu } = require('electron');
+const path = require('path')
+const os = require('os')
+const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron')
+const imagemin = require('imagemin')
+const imageminPngquant = require('imagemin-pngquant')
+const imageminMozjpeg = require('imagemin-mozjpeg')
+const slash = require('slash')
 
 // 開発環境に設定
-process.env.NODE_ENV = 'development';
+process.env.NODE_ENV = 'development'
 
-const isDev = process.env.NODE_ENV !== 'production' ? true : false;
-const isMac = process.platform === 'darwin' ? true : false;
+const isDev = process.env.NODE_ENV !== 'production' ? true : false
+const isMac = process.platform === 'darwin' ? true : false
 
-let mainWindow;
-let aboutWindow;
+let mainWindow
+let aboutWindow
 
+// メイン画面にindex.htmlを読み込み、メイン画面を描画する関数
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     title: '画像圧縮ツール',
@@ -20,15 +27,16 @@ function createMainWindow() {
     webPreferences: {
       nodeIntegration: true,
     },
-  });
+  })
 
   if (isDev) {
-    mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools()
   }
 
-  mainWindow.loadFile(`${__dirname}/app/index.html`);
+  mainWindow.loadFile(`${__dirname}/app/index.html`)
 }
 
+// About画面にabout.htmlを読み込み、About画面を描写する関数
 function createAboutWindow() {
   aboutWindow = new BrowserWindow({
     title: '画像圧縮ツール',
@@ -37,19 +45,21 @@ function createAboutWindow() {
     icon: `${__dirname}/assets/icons/Icon_32x32.png`,
     resizable: false,
     backgroundColor: 'white',
-  });
+  })
 
-  aboutWindow.loadFile(`${__dirname}/app/about.html`);
+  aboutWindow.loadFile(`${__dirname}/app/about.html`)
 }
 
+// メイン画面を呼び出し、カスタムしたメニューバーを表示する
 app.on('ready', () => {
-  createMainWindow();
+  createMainWindow()
 
-  const mainMenu = Menu.buildFromTemplate(menu);
-  Menu.setApplicationMenu(mainMenu);
-  mainWindow.on('closed', () => (mainWindow = null));
-});
+  const mainMenu = Menu.buildFromTemplate(menu)
+  Menu.setApplicationMenu(mainMenu)
+  mainWindow.on('closed', () => (mainWindow = null))
+})
 
+// メニューバーの項目を設定する
 const menu = [
   ...(isMac
     ? [
@@ -93,16 +103,48 @@ const menu = [
         },
       ]
     : []),
-];
+]
 
+// レンダラープロセスからイベントを受け取る処理
+ipcMain.on('image:minimize', (e, options) => {
+  options.dest = path.join(os.homedir(), 'imageshrink')
+  shrinkImage(options)
+})
+
+// 外部ライブラリを利用して画像を非同期的に圧縮する関数
+async function shrinkImage({ imgPath, quality, dest }) {
+  try {
+    const pngQuality = quality / 100
+
+    const files = await imagemin([slash(imgPath)], {
+      destination: dest,
+      plugins: [
+        imageminMozjpeg({ quality }),
+        imageminPngquant({
+          quality: [pngQuality, pngQuality],
+        }),
+      ],
+    })
+
+    console.log(files)
+
+    shell.openPath(dest)
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+// 画面を閉じたときにプログラムを終了させるイベントリスナー
 app.on('window-all-closed', () => {
   if (!isMac) {
-    app.quit();
+    app.quit()
   }
-});
+})
 
+// アプリケーションがアクティブにされた後で表示するウインドウがない場合にのみ新しいブラウザーウインドウを作成する
+// 例えば、アプリケーションを初めて起動した後や、既に起動しているアプリケーションを再びアクティブした場合など
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
+    createWindow()
   }
-});
+})
