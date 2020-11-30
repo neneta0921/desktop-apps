@@ -1,6 +1,6 @@
 const path = require('path')
 const os = require('os')
-const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain } = require('electron')
 const imagemin = require('imagemin')
 const imageminPngquant = require('imagemin-pngquant')
 const imageminMozjpeg = require('imagemin-mozjpeg')
@@ -8,7 +8,7 @@ const slash = require('slash')
 const log = require('electron-log')
 
 // 開発環境に設定
-process.env.NODE_ENV = 'production'
+process.env.NODE_ENV = 'development'
 
 const isDev = process.env.NODE_ENV !== 'production' ? true : false
 const isMac = process.platform === 'darwin' ? true : false
@@ -26,7 +26,14 @@ function createMainWindow() {
     resizable: isDev,
     backgroundColor: 'white',
     webPreferences: {
-      nodeIntegration: true,
+      // In Electron 12, the default will be changed to true.
+      worldSafeExecuteJavaScript: true,
+      // XSS対策としてnodeモジュールをレンダラープロセスで使えなくする
+      // nodeIntegration: true,
+      nodeIntegration: false,
+      // レンダラープロセスに公開するAPIのファイル
+      contextIsolation: true,
+      preload: path.resolve(`${__dirname}/preload.js`),
     },
   })
 
@@ -53,10 +60,12 @@ function createAboutWindow() {
 
 // メイン画面を呼び出し、カスタムしたメニューバーを表示する
 app.on('ready', () => {
+  // メイン画面を表示
   createMainWindow()
-
+  // メニューバーを表示
   const mainMenu = Menu.buildFromTemplate(menu)
   Menu.setApplicationMenu(mainMenu)
+
   mainWindow.on('closed', () => (mainWindow = null))
 })
 
@@ -106,6 +115,12 @@ const menu = [
     : []),
 ]
 
+// ファイルの出力先を表示
+ipcMain.handle('image:savePath', (e) => {
+  const savePath = slash(path.join(os.homedir(), 'imageshrink'))
+  return savePath
+})
+
 // レンダラープロセスからイベントを受け取る処理
 ipcMain.on('image:minimize', (e, options) => {
   options.dest = path.join(os.homedir(), 'imageshrink')
@@ -114,6 +129,8 @@ ipcMain.on('image:minimize', (e, options) => {
 
 // 外部ライブラリを利用して画像を非同期的に圧縮する関数
 async function shrinkImage({ imgPath, quality, dest }) {
+  const { shell } = require('electron')
+
   try {
     const pngQuality = quality / 100
 
@@ -130,8 +147,7 @@ async function shrinkImage({ imgPath, quality, dest }) {
     log.info(files)
 
     shell.openPath(dest)
-
-    mainWindow.webContents.send('image:done')
+    mainWindow.webContents.send('image:done', quality)
   } catch (err) {
     log.error(err)
   }
