@@ -6,8 +6,8 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('image:savePath').then((result) => result),
 
   // 画像の圧縮処理をメインプロセスで行う
-  imageMinimize: (imgPath, quality) =>
-    ipcRenderer.send('image:minimize', { imgPath, quality }),
+  imageMinimize: (imgPathArray, quality) =>
+    ipcRenderer.send('image:minimize', { imgPathArray, quality }),
 
   // 画像の圧縮処理の完了を通知する
   imageDone: (listener) =>

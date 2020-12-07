@@ -2,13 +2,16 @@ const path = require('path')
 const os = require('os')
 const { app, BrowserWindow, Menu, ipcMain } = require('electron')
 const imagemin = require('imagemin')
-const imageminPngquant = require('imagemin-pngquant')
 const imageminMozjpeg = require('imagemin-mozjpeg')
+const imageminPngquant = require('imagemin-pngquant')
+const imageminGifsicle = require('imagemin-gifsicle')
+const imageminSvgo = require('imagemin-svgo')
 const slash = require('slash')
 const log = require('electron-log')
 
 // 開発環境に設定
 process.env.NODE_ENV = 'development'
+// process.env.NODE_ENV = 'production'
 
 const isDev = process.env.NODE_ENV !== 'production' ? true : false
 const isMac = process.platform === 'darwin' ? true : false
@@ -127,27 +130,75 @@ ipcMain.on('image:minimize', (e, options) => {
   shrinkImage(options)
 })
 
+function imageMinimize(imgPath, quality, dest, pngQuality) {
+  const files = imagemin([slash(imgPath)], {
+    destination: slash(dest),
+    plugins: [
+      imageminMozjpeg({ quality }),
+      imageminPngquant({
+        quality: [pngQuality, pngQuality],
+      }),
+      imageminGifsicle(),
+      imageminSvgo(),
+    ],
+  })
+  return files
+}
+
+function logFormat(files) {
+  const result = {
+    sourcePath: files[0].sourcePath,
+    destinationPath: slash(files[0].destinationPath),
+  }
+  return result
+}
+
+// 圧縮後のファイルサイズの合計を計算する関数
+function afterImgSizeSum(minimizeFilesArray) {
+  const fs = require('fs')
+
+  // mapでsizeを取り出しreduceで足し合わせる
+  const afterImgSize = minimizeFilesArray
+    .map((filePath) => {
+      const stats = fs.statSync(filePath)
+      return stats.size
+    })
+    .reduce((prev, current) => {
+      return prev + current
+    }, 0)
+
+  return afterImgSize
+}
+
 // 外部ライブラリを利用して画像を非同期的に圧縮する関数
-async function shrinkImage({ imgPath, quality, dest }) {
+async function shrinkImage({ imgPathArray, quality, dest }) {
   const { shell } = require('electron')
 
   try {
+    // pngの圧縮率を調整する
     const pngQuality = quality / 100
 
-    const files = await imagemin([slash(imgPath)], {
-      destination: dest,
-      plugins: [
-        imageminMozjpeg({ quality }),
-        imageminPngquant({
-          quality: [pngQuality, pngQuality],
-        }),
-      ],
-    })
+    // 画像を圧縮し、圧縮後のファイルパスを取得する
+    const minimizeFilesArray = []
+    for (imgPath of imgPathArray) {
+      // 画像を圧縮する
+      const files = await imageMinimize(imgPath, quality, dest, pngQuality)
+      // ログ用にデータを整形
+      const result = logFormat(files)
+      // logを書き込む
+      log.info(result)
+      // 圧縮後のファイルパスを配列に格納する
+      minimizeFilesArray.push(slash(files[0].destinationPath))
+    }
 
-    log.info(files)
+    // 圧縮後のファイルサイズの合計を計算する
+    const afterImgSize = afterImgSizeSum(minimizeFilesArray)
 
-    shell.openPath(dest)
-    mainWindow.webContents.send('image:done', quality)
+    // 圧縮したファイルが存在するフォルダを開く
+    shell.openPath(slash(dest))
+
+    // 圧縮処理が完了したことをレンダラープロセスに伝える
+    mainWindow.webContents.send('image:done', afterImgSize)
   } catch (err) {
     log.error(err)
   }
