@@ -1,6 +1,6 @@
 const path = require('path')
 const os = require('os')
-const { app, BrowserWindow, Menu, ipcMain } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron')
 const imagemin = require('imagemin')
 const imageminMozjpeg = require('imagemin-mozjpeg')
 const imageminPngquant = require('imagemin-pngquant')
@@ -130,7 +130,8 @@ ipcMain.on('image:minimize', (e, options) => {
   shrinkImage(options)
 })
 
-function imageMinimize(imgPath, quality, dest, pngQuality) {
+// 外部ライブラリを利用してイメージファイルを圧縮する処理
+function getMinimizeFile(imgPath, quality, dest, pngQuality) {
   const files = imagemin([slash(imgPath)], {
     destination: slash(dest),
     plugins: [
@@ -145,7 +146,7 @@ function imageMinimize(imgPath, quality, dest, pngQuality) {
   return files
 }
 
-function logFormat(files) {
+function formatFile(files) {
   const result = {
     sourcePath: files[0].sourcePath,
     destinationPath: slash(files[0].destinationPath),
@@ -154,7 +155,7 @@ function logFormat(files) {
 }
 
 // 圧縮後のファイルサイズの合計を計算する関数
-function afterImgSizeSum(minimizeFilesArray) {
+function sumAfterImgSize(minimizeFilesArray) {
   const fs = require('fs')
 
   // mapでsizeを取り出しreduceで足し合わせる
@@ -172,8 +173,6 @@ function afterImgSizeSum(minimizeFilesArray) {
 
 // 外部ライブラリを利用して画像を非同期的に圧縮する関数
 async function shrinkImage({ imgPathArray, quality, dest }) {
-  const { shell } = require('electron')
-
   try {
     // pngの圧縮率を調整する
     const pngQuality = quality / 100
@@ -182,17 +181,17 @@ async function shrinkImage({ imgPathArray, quality, dest }) {
     const minimizeFilesArray = []
     for (imgPath of imgPathArray) {
       // 画像を圧縮する
-      const files = await imageMinimize(imgPath, quality, dest, pngQuality)
+      const files = await getMinimizeFile(imgPath, quality, dest, pngQuality)
       // ログ用にデータを整形
-      const result = logFormat(files)
+      const formatResult = formatFile(files)
       // logを書き込む
-      log.info(result)
+      log.info(formatResult)
       // 圧縮後のファイルパスを配列に格納する
       minimizeFilesArray.push(slash(files[0].destinationPath))
     }
 
     // 圧縮後のファイルサイズの合計を計算する
-    const afterImgSize = afterImgSizeSum(minimizeFilesArray)
+    const afterImgSize = sumAfterImgSize(minimizeFilesArray)
 
     // 圧縮したファイルが存在するフォルダを開く
     shell.openPath(slash(dest))
