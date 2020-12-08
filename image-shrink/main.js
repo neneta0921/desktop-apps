@@ -200,6 +200,8 @@ async function shrinkImage({ imgPathArray, quality, dest }) {
     mainWindow.webContents.send('image:done', afterImgSize)
   } catch (err) {
     log.error(err)
+    // 圧縮処理が失敗したことをレンダラープロセスに伝える
+    mainWindow.webContents.send('image:error')
   }
 }
 

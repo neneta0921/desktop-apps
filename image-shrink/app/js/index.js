@@ -31,6 +31,7 @@ function outputMessage(text) {
 
 function validFileType(files) {
   const fileTypes = ['image/gif', 'image/jpeg', 'image/png', 'image/svg+xml']
+  const regex = /[\(\)-]/g
 
   if (files.length === 0) {
     outputMessage(`画像を選択してください`)
@@ -38,10 +39,14 @@ function validFileType(files) {
   }
 
   for (file of files) {
+    // ファイルタイプの確認
     if (!fileTypes.includes(file.type)) {
       outputMessage(`${file.name}は圧縮できません`)
-      outputMessage(`.jpg, .png, .gif, .svgを選択してください `)
       return false
+    }
+    // ファイル名の確認
+    if (regex.test(file.name)) {
+      outputMessage('使用できない文字が含まれています')
     }
   }
   return true
@@ -77,4 +82,10 @@ window.api.imageDone((afterImgSize) => {
   outputMessage(`画像を${quality}%圧縮しました`)
   // 表示していたファイル名をクリア
   fileName.value = ''
+})
+
+// イメージを圧縮のエラーをメインプロセスから処理を受け取る
+// contextBridge
+window.api.imageError(() => {
+  outputMessage('エラーのため処理できませんでした')
 })

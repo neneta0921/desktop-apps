@@ -12,4 +12,8 @@ contextBridge.exposeInMainWorld('api', {
   // 画像の圧縮処理の完了を通知する
   imageDone: (listener) =>
     ipcRenderer.on('image:done', (event, arg) => listener(arg)),
+
+  // 画像の圧縮処理のエラーを通知する
+  imageError: (listener) =>
+    ipcRenderer.on('image:error', (event) => listener()),
 })
