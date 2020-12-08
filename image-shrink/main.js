@@ -1,6 +1,6 @@
 const path = require('path')
 const os = require('os')
-const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain } = require('electron')
 const imagemin = require('imagemin')
 const imageminMozjpeg = require('imagemin-mozjpeg')
 const imageminPngquant = require('imagemin-pngquant')
@@ -10,8 +10,8 @@ const slash = require('slash')
 const log = require('electron-log')
 
 // 開発環境に設定
-process.env.NODE_ENV = 'development'
-// process.env.NODE_ENV = 'production'
+// process.env.NODE_ENV = 'development'
+process.env.NODE_ENV = 'production'
 
 const isDev = process.env.NODE_ENV !== 'production' ? true : false
 const isMac = process.platform === 'darwin' ? true : false
@@ -132,6 +132,7 @@ ipcMain.on('image:minimize', (e, options) => {
 
 // 外部ライブラリを利用してイメージファイルを圧縮する処理
 function getMinimizeFile(imgPath, quality, dest, pngQuality) {
+  // ファイルの圧縮処理
   const files = imagemin([slash(imgPath)], {
     destination: slash(dest),
     plugins: [
@@ -173,6 +174,8 @@ function sumAfterImgSize(minimizeFilesArray) {
 
 // 外部ライブラリを利用して画像を非同期的に圧縮する関数
 async function shrinkImage({ imgPathArray, quality, dest }) {
+  const { shell } = require('electron')
+
   try {
     // pngの圧縮率を調整する
     const pngQuality = quality / 100
@@ -182,6 +185,12 @@ async function shrinkImage({ imgPathArray, quality, dest }) {
     for (imgPath of imgPathArray) {
       // 画像を圧縮する
       const files = await getMinimizeFile(imgPath, quality, dest, pngQuality)
+      // slashでパスが上手く処理できない場合の処理
+      if (files.length === 0) {
+        log.error('PathError: Path contains characters that are not available')
+        // 利用できない文字が含まれていることをレンダラープロセスに伝える
+        return mainWindow.webContents.send('image:undefined')
+      }
       // ログ用にデータを整形
       const formatResult = formatFile(files)
       // logを書き込む
@@ -200,6 +209,8 @@ async function shrinkImage({ imgPathArray, quality, dest }) {
     mainWindow.webContents.send('image:done', afterImgSize)
   } catch (err) {
     log.error(err)
+    // 圧縮処理が失敗したことをレンダラープロセスに伝える
+    mainWindow.webContents.send('image:error')
   }
 }
 
