@@ -1,6 +1,6 @@
 const path = require('path')
 const os = require('os')
-const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain } = require('electron')
 const imagemin = require('imagemin')
 const imageminMozjpeg = require('imagemin-mozjpeg')
 const imageminPngquant = require('imagemin-pngquant')
@@ -10,8 +10,8 @@ const slash = require('slash')
 const log = require('electron-log')
 
 // 開発環境に設定
-process.env.NODE_ENV = 'development'
-// process.env.NODE_ENV = 'production'
+// process.env.NODE_ENV = 'development'
+process.env.NODE_ENV = 'production'
 
 const isDev = process.env.NODE_ENV !== 'production' ? true : false
 const isMac = process.platform === 'darwin' ? true : false
@@ -174,6 +174,8 @@ function sumAfterImgSize(minimizeFilesArray) {
 
 // 外部ライブラリを利用して画像を非同期的に圧縮する関数
 async function shrinkImage({ imgPathArray, quality, dest }) {
+  const { shell } = require('electron')
+
   try {
     // pngの圧縮率を調整する
     const pngQuality = quality / 100
