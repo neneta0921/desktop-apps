@@ -37,13 +37,11 @@
             />
           </div>
         </div>
-        <p>
-          <strong>品質: </strong>
-          <em>数字が小さいほど画像を圧縮します</em><br />
-          ※gifとsvgは品質を指定できません
-        </p>
         <p class="range-field">
-          <input type="range" min="0" max="100" id="slider" />
+          <strong>jpgとpngの品質: </strong>
+          <em>数字が小さいほど画像を圧縮します</em><br />
+          <input type="range" min="0" max="100" id="slider" /><br />
+          ※gifとsvgは品質を指定できません
         </p>
 
         <input type="submit" value="Resize" class="btn red darken-2" />
@@ -51,7 +49,7 @@
 
       <div class="card output">
         <div class="card-content">
-          ファイルの出力先：<span id="output-path"></span>
+          ファイルの出力先：<span id="output-path"></span><br />
         </div>
       </div>
     </div>

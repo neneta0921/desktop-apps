@@ -132,6 +132,7 @@ ipcMain.on('image:minimize', (e, options) => {
 
 // 外部ライブラリを利用してイメージファイルを圧縮する処理
 function getMinimizeFile(imgPath, quality, dest, pngQuality) {
+  // ファイルの圧縮処理
   const files = imagemin([slash(imgPath)], {
     destination: slash(dest),
     plugins: [
@@ -182,6 +183,12 @@ async function shrinkImage({ imgPathArray, quality, dest }) {
     for (imgPath of imgPathArray) {
       // 画像を圧縮する
       const files = await getMinimizeFile(imgPath, quality, dest, pngQuality)
+      // slashでパスが上手く処理できない場合の処理
+      if (files.length === 0) {
+        log.error('PathError: Path contains characters that are not available')
+        // 利用できない文字が含まれていることをレンダラープロセスに伝える
+        return mainWindow.webContents.send('image:undefined')
+      }
       // ログ用にデータを整形
       const formatResult = formatFile(files)
       // logを書き込む

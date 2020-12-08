@@ -13,6 +13,10 @@ contextBridge.exposeInMainWorld('api', {
   imageDone: (listener) =>
     ipcRenderer.on('image:done', (event, arg) => listener(arg)),
 
+  // 利用できない文字が含まれていることを通知する
+  imageUndefined: (listener) =>
+    ipcRenderer.on('image:undefined', (event) => listener()),
+
   // 画像の圧縮処理のエラーを通知する
   imageError: (listener) =>
     ipcRenderer.on('image:error', (event) => listener()),
