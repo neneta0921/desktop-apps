@@ -4,23 +4,53 @@
   "version": "1.0.0",
   "description": "App to optimize images for website",
   "main": "main.js",
+  "build": {
+    "appId": "com.electron.image-shrink",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "assets",
+      "app",
+      "main.js",
+      "preload.js",
+      "package.json",
+      "package-lock.json"
+    ],
+    "mac": {
+      "icon": "assets/icons/mac/icon.icns",
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "icon": "assets/icons/win/icon.ico",
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
   "scripts": {
     "start": "electron .",
     "dev": "nodemon --exec electron .",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/icons/mac/icon.icns --prune=true --out=release-builds",
-    "package-win": "electron-packager . --overwrite --platform=win32 --arch=ia32 --icon=assets/icons/win/icon.ico --prune=false --out=release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"ImageShrink\"",
+    "package-mac": "node_modules/.bin/electron-builder --mac --x64",
+    "package-win": "node_modules/.bin/electron-builder --win --x64",
+    "package-win:mini": "node_modules/.bin/electron-builder --win --x64 --dir",
+    "dist": "electron-builder",
     "package-linux": "electron-packager . --overwrite --platform=linux --arch=x64 --icon=assets/icons/png/icon.png --prune=false --out=release-builds"
   },
   "author": "Kentaro Kawamura",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^11.0.3",
-    "electron-packager": "^15.2.0",
-    "nodemon": "^2.0.6"
+    "electron": "^11.2.1",
+    "electron-builder": "^22.9.1",
+    "nodemon": "^2.0.7"
   },
   "dependencies": {
-    "electron-log": "^4.3.0",
+    "electron-log": "^4.3.1",
     "imagemin": "^7.0.1",
     "imagemin-gifsicle": "^7.0.0",
     "imagemin-mozjpeg": "^9.0.0",
