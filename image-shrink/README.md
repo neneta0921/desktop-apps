@@ -3,10 +3,10 @@ web用の画像をローカル環境で一括で圧縮できるソフトです�
 圧縮処理はnpmのライブラリを利用して実装しています。  
 現在はWindowsにのみ対応しています。  
 
-- [インストーラー版](https://github.com/neneta0921/desktop-apps/raw/main/image-shrink/ImageShrink-Win-Setup-1.0.0.zip)
+- [インストーラ版](https://github.com/neneta0921/desktop-apps/raw/main/image-shrink/ImageShrink-Win-Setup-1.0.0.zip)
 - [ポータル版](https://github.com/neneta0921/desktop-apps/raw/main/image-shrink/ImageShrink-Win-Portable-1.0.0.zip)
 
-## 使用方法：ポータル版
+## 使用方法：インストーラ版
 1. [ダウンロード](https://github.com/neneta0921/desktop-apps/raw/main/image-shrink/ImageShrink-Win-Setup-1.0.0.zip)して解凍してください。
 2. ImageShrink Setup 1.0.0.exeを実行するとインストーラーが起動するので、Windowsにインストールしてください。
 3. インストールが完了したらソフトを起動し、画像ファイルを選んで圧縮してください。  
