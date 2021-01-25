@@ -31,7 +31,7 @@ function outputMessage(text) {
 
 function validFileType(files) {
   const fileTypes = ['image/gif', 'image/jpeg', 'image/png', 'image/svg+xml']
-  const regex = /[/(/)]/g
+  const regex = /[\\x00-\\x1f<>:\"/\\\\|?*]|^(CON|PRN|AUX|NUL|COM[0-9]|LPT[0-9]|CLOCK\\$)(\\.|$)|[\\. ]$/
 
   if (files.length === 0) {
     outputMessage(`画像を選択してください`)
@@ -45,8 +45,8 @@ function validFileType(files) {
       return false
     }
     // ファイル名の確認
-    if (regex.test(file.name)) {
-      outputMessage('使用できない文字が含まれています')
+    if (!regex.test(file.name)) {
+      outputMessage('利用できない文字が含まれているので、処理を中断しました')
       return false
     }
   }
